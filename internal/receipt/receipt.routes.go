@@ -1,14 +1,100 @@
 package receipt
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/google/uuid"
+	custom_errors "github.com/sebasromero/receipt-processor/internal/custom-errors"
+	"github.com/sebasromero/receipt-processor/internal/db"
+	"github.com/sebasromero/receipt-processor/internal/models"
 )
 
 func Process(w http.ResponseWriter, r *http.Request) {
+	receipt := &models.SaveReceipt{}
+	err := json.NewDecoder(r.Body).Decode(receipt)
+	if err != nil {
+		fmt.Println(err)
+		w.Write([]byte(custom_errors.ErrorDecoding))
+		return
+	}
 
-	w.Write([]byte("Process"))
+	newId, err := generateId()
+
+	if err != nil {
+		w.Write([]byte(custom_errors.ErrorGeneratingId))
+		return
+	}
+
+	purchaseDate, err := parseDate(receipt.PurchaseDate)
+
+	if err != nil {
+		w.Write([]byte(custom_errors.ErrorParsingDate))
+		return
+	}
+
+	purchaseTime, err := parseTime(receipt.PurchaseTime)
+
+	if err != nil {
+		w.Write([]byte(custom_errors.ErrorParsingTime))
+		return
+	}
+
+	parsedPrice, err := strconv.ParseFloat(receipt.Total, 64)
+
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	newReceipt := &models.Receipt{
+		Id:           newId,
+		Retailer:     receipt.Retailer,
+		PurchaseDate: purchaseDate,
+		PurchaseTime: purchaseTime,
+		Items:        receipt.Items,
+		Total:        parsedPrice,
+	}
+
+	db.Receipts = append(db.Receipts, *newReceipt)
+
+	fmt.Println(db.Receipts)
+
+	json.NewEncoder(w).Encode(&models.ProcessResponse{
+		Id: newId,
+	})
 }
 
 func Points(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Points"))
+}
+
+func generateId() (string, error) {
+	uuid, err := uuid.NewRandom()
+	if err != nil {
+		return "", err
+	}
+	return uuid.String(), nil
+}
+
+func parseDate(date string) (time.Time, error) {
+	layout := "2006-01-02"
+	t, err := time.Parse(layout, date)
+	if err != nil {
+		return time.Now(), err
+	}
+	return t, nil
+}
+
+func parseTime(unParsedTime string) (time.Time, error) {
+	layout := "15:04"
+	t, err := time.Parse(layout, unParsedTime)
+	if err != nil {
+		return time.Now(), err
+	}
+	return t, nil
+
 }
