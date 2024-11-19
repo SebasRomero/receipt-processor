@@ -5,7 +5,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sebasromero/github.com/receipt-processor/internal"
+
+	"github.com/sebasromero/receipt-processor/internal"
 )
 
 func main() {
@@ -13,7 +14,7 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	fmt.Println("Listen in port: ", port)
+	fmt.Println("Listen in port:", port)
 	err := http.ListenAndServe(":"+port, internal.MainHandler())
 	if err != nil {
 		log.Panic(err)

@@ -2,8 +2,9 @@ package internal
 
 import (
 	"net/http"
-	"sebasromero/github.com/receipt-processor/internal/health"
-	"sebasromero/github.com/receipt-processor/internal/receipt"
+
+	"github.com/sebasromero/receipt-processor/internal/health"
+	"github.com/sebasromero/receipt-processor/internal/receipt"
 )
 
 func MainHandler() *http.ServeMux {

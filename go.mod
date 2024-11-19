@@ -1,3 +1,3 @@
-module sebasromero/github.com/receipt-processor
+module github.com/sebasromero/receipt-processor
 
 go 1.22.0
