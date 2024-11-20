@@ -55,11 +55,11 @@ func Process(w http.ResponseWriter, r *http.Request) {
 		PurchaseTime: purchaseTime,
 		Items:        receipt.Items,
 		Total:        parsedPrice,
+		Points:       0,
 	}
+	newReceipt.Points = calculatePoints(*newReceipt)
 
 	db.Receipts = append(db.Receipts, *newReceipt)
-
-	fmt.Println(db.Receipts)
 
 	json.NewEncoder(w).Encode(&models.ProcessResponse{
 		Id: newId,
@@ -67,5 +67,15 @@ func Process(w http.ResponseWriter, r *http.Request) {
 }
 
 func Points(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Points"))
+	for _, item := range db.Receipts {
+		if r.PathValue("id") == item.Id {
+			json.NewEncoder(w).Encode(&models.PointsResponse{
+				Points: item.Points,
+			})
+		}
+	}
+}
+
+func Receipts(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(&db.Receipts)
 }

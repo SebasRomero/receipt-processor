@@ -9,6 +9,7 @@ type Receipt struct {
 	PurchaseTime time.Time
 	Total        float64
 	Items        []Item
+	Points       int
 }
 
 type SaveReceipt struct {
@@ -25,4 +26,8 @@ type Item struct {
 
 type ProcessResponse struct {
 	Id string
+}
+
+type PointsResponse struct {
+	Points int
 }
