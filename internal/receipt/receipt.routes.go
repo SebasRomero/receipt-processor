@@ -44,10 +44,24 @@ func Process(w http.ResponseWriter, r *http.Request) {
 	parsedPrice, err := strconv.ParseFloat(receipt.Total, 64)
 
 	if err != nil {
-		w.Write([]byte(err.Error()))
+		w.Write([]byte(custom_errors.ErrorParsingPrice))
 		return
 	}
 
+	if !ValidateAllItemsAreCorrect(receipt.Items) {
+		w.Write([]byte(custom_errors.ErrorParsingPrice))
+		return
+	}
+
+	if !ValidatePriceArePositive(receipt.Items) {
+		w.Write([]byte(custom_errors.ErrorNegativeNumber))
+		return
+	}
+
+	if ValidatePriceIsPositive(receipt.Total) {
+		w.Write([]byte(custom_errors.ErrorNegativeNumber))
+		return
+	}
 	newReceipt := &models.Receipt{
 		Id:           newId,
 		Retailer:     receipt.Retailer,

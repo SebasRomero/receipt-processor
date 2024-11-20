@@ -106,3 +106,28 @@ func checkDayOdd(date time.Time) bool {
 func checkTimeOfPurchase(date time.Time) bool {
 	return date.Hour() >= 14 && date.Hour() < 16 && date.Minute() >= 1 && date.Minute() <= 59
 }
+
+func ValidateAllItemsAreCorrect(items []models.Item) bool {
+	for _, v := range items {
+		_, err := strconv.ParseFloat(v.Price, 64)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func ValidatePriceArePositive(items []models.Item) bool {
+	for _, v := range items {
+		res, _ := strconv.ParseFloat(v.Price, 64)
+		if res < 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func ValidatePriceIsPositive(price string) bool {
+	res, _ := strconv.ParseFloat(price, 64)
+	return res < 0
+}
