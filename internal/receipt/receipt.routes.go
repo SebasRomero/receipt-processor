@@ -23,43 +23,71 @@ func Process(w http.ResponseWriter, r *http.Request) {
 	newId, err := GenerateId()
 
 	if err != nil {
-		w.Write([]byte(custom_errors.ErrorGeneratingId))
+		w.WriteHeader(http.StatusBadGateway)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": custom_errors.ErrorGeneratingId,
+		})
 		return
 	}
 
 	purchaseDate, err := ParseDate(receipt.PurchaseDate)
 
 	if err != nil {
-		w.Write([]byte(custom_errors.ErrorParsingDate))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": custom_errors.ErrorParsingDate,
+		})
 		return
 	}
 
 	purchaseTime, err := ParseTime(receipt.PurchaseTime)
 
 	if err != nil {
-		w.Write([]byte(custom_errors.ErrorParsingTime))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": custom_errors.ErrorParsingTime,
+		})
 		return
 	}
 
 	parsedPrice, err := strconv.ParseFloat(receipt.Total, 64)
 
 	if err != nil {
-		w.Write([]byte(custom_errors.ErrorParsingPrice))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": custom_errors.ErrorParsingPrice,
+		})
 		return
 	}
 
 	if !ValidateAllItemsAreCorrect(receipt.Items) {
-		w.Write([]byte(custom_errors.ErrorParsingPrice))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": custom_errors.ErrorParsingPrice,
+		})
 		return
 	}
 
 	if !ValidatePriceArePositive(receipt.Items) {
-		w.Write([]byte(custom_errors.ErrorNegativeNumber))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": custom_errors.ErrorNegativeNumber,
+		})
 		return
 	}
 
 	if ValidatePriceIsPositive(receipt.Total) {
-		w.Write([]byte(custom_errors.ErrorNegativeNumber))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": custom_errors.ErrorNegativeNumber,
+		})
 		return
 	}
 	newReceipt := &models.Receipt{
@@ -75,21 +103,35 @@ func Process(w http.ResponseWriter, r *http.Request) {
 
 	db.Receipts = append(db.Receipts, *newReceipt)
 
+	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&models.ProcessResponse{
 		Id: newId,
 	})
+
 }
 
 func Points(w http.ResponseWriter, r *http.Request) {
 	for _, item := range db.Receipts {
 		if r.PathValue("id") == item.Id {
+			w.WriteHeader(http.StatusOK)
+			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(&models.PointsResponse{
 				Points: item.Points,
 			})
+			return
 		}
 	}
+
+	w.WriteHeader(http.StatusNotFound)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"error": "Receipt not found",
+	})
 }
 
 func Receipts(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&db.Receipts)
 }
