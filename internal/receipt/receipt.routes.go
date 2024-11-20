@@ -90,6 +90,15 @@ func Process(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	if ValidateYear(purchaseDate) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": custom_errors.ErrorBadYearInput,
+		})
+		return
+	}
 	newReceipt := &models.Receipt{
 		Id:           newId,
 		Retailer:     receipt.Retailer,

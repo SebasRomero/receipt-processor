@@ -131,3 +131,7 @@ func ValidatePriceIsPositive(price string) bool {
 	res, _ := strconv.ParseFloat(price, 64)
 	return res < 0
 }
+
+func ValidateYear(date time.Time) bool {
+	return (date.Year() > time.Now().Year())
+}
